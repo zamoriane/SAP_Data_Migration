@@ -1,0 +1,323 @@
+REPORT zmigra003.
+
+
+TABLES: mlgn,       "Dados de material por sistema de depósito
+        mlgt,       "Dados de material por ctg.de depósito
+        mara.       "Mestre de Materiais
+
+
+
+DATA: BEGIN OF t_mlgn OCCURS 0,
+      matnr     TYPE mlgn-matnr,
+      lgnum     TYPE mlgn-lgnum,
+      lgbkz     TYPE mlgn-lgbkz,
+      ltkze     TYPE mlgn-ltkze,
+      ltkza     TYPE mlgn-ltkza,
+      lhmg1     TYPE mlgn-lhmg1,
+      lhmg2     TYPE mlgn-lhmg2,
+      lhmg3     TYPE mlgn-lhmg3,
+      lhme1     TYPE mlgn-lhme1,
+      lhme2     TYPE mlgn-lhme2,
+      lhme3     TYPE mlgn-lhme3,
+      lety1     TYPE mlgn-lety1,
+      lety2     TYPE mlgn-lety2,
+      lety3     TYPE mlgn-lety3,
+      lvsme     TYPE mlgn-lvsme,
+      kzzul     TYPE mlgn-kzzul,
+      block     TYPE mlgn-block,
+      kzmbf     TYPE mlgn-kzmbf,
+      bsskz     TYPE mlgn-bsskz,
+      mkapv     TYPE mlgn-mkapv,
+      bezme     TYPE mlgn-bezme,
+      plkpt     TYPE mlgn-plkpt,
+      vomem     TYPE mlgn-vomem,
+      l2skr     TYPE mlgn-l2skr,
+      END OF t_mlgn.
+
+DATA: BEGIN OF t_mlgntxt OCCURS 0,
+      matnr(18)     TYPE c,
+      lgnum(03)     TYPE c,
+      lgbkz(03)     TYPE c,
+      ltkze(03)     TYPE c,
+      ltkza(03)     TYPE c,
+      lhmg1(16)     TYPE c,
+      lhmg2(16)     TYPE c,
+      lhmg3(16)     TYPE c,
+      lhme1(03)     TYPE c,
+      lhme2(03)     TYPE c,
+      lhme3(03)     TYPE c,
+      lety1(03)     TYPE c,
+      lety2(03)     TYPE c,
+      lety3(03)     TYPE c,
+      lvsme(03)     TYPE c,
+      kzzul(01)     TYPE c,
+      block(02)     TYPE c,
+      kzmbf(01)     TYPE c,
+      bsskz(01)     TYPE c,
+      mkapv(11)     TYPE c,
+      bezme(03)     TYPE c,
+      plkpt(03)     TYPE c,
+      vomem(01)     TYPE c,
+      l2skr(01)     TYPE c,
+      END OF t_mlgntxt.
+
+DATA: BEGIN OF t_mlgt OCCURS 0,
+      matnr     TYPE mlgt-matnr,
+      lgnum     TYPE mlgt-lgnum,
+      lgtyp     TYPE mlgt-lgtyp,
+      lgpla     TYPE mlgt-lgpla,
+      lpmax     TYPE mlgt-lpmax,
+      lpmin     TYPE mlgt-lpmin,
+      mamng     TYPE mlgt-mamng,
+      nsmng     TYPE mlgt-nsmng,
+      kober     TYPE mlgt-kober,
+      rdmng     TYPE mlgt-rdmng,
+      END OF t_mlgt.
+
+DATA: BEGIN OF t_mlgttxt OCCURS 0,
+      matnr(18)     TYPE c,
+      lgnum(03)     TYPE c,
+      lgtyp(03)     TYPE c,
+      lgpla(10)     TYPE c,
+      lpmax(16)     TYPE c,
+      lpmin(16)     TYPE c,
+      mamng(16)     TYPE c,
+      nsmng(16)     TYPE c,
+      kober(03)     TYPE c,
+      rdmng(16)     TYPE c,
+      END OF t_mlgttxt.
+
+
+SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE text-001.
+
+SELECT-OPTIONS: s_matnr FOR mara-matnr,
+                s_lgnum FOR mlgn-lgnum OBLIGATORY.
+
+SELECTION-SCREEN SKIP 1.
+
+PARAMETERS:  p_mlgn   TYPE rlgrap-filename OBLIGATORY,
+             p_mlgt   TYPE rlgrap-filename OBLIGATORY.
+
+
+SELECTION-SCREEN SKIP 1.
+PARAMETERS: p_local    TYPE c RADIOBUTTON GROUP gp1,
+            p_serv     TYPE c RADIOBUTTON GROUP gp1 DEFAULT 'X'.
+SELECTION-SCREEN SKIP 1.
+
+
+SELECTION-SCREEN END OF BLOCK b1.
+
+
+*----------------------------------------------------------------------*
+*   A T   S E L E C T I O N - S C R E E N
+*----------------------------------------------------------------------*
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_mlgn.
+
+  CALL FUNCTION 'F4_FILENAME'
+    IMPORTING
+      file_name = p_mlgn.
+
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_mlgt.
+
+  CALL FUNCTION 'F4_FILENAME'
+    IMPORTING
+      file_name = p_mlgt.
+
+
+*----------------------------------------------------------------------*
+START-OF-SELECTION.
+*----------------------------------------------------------------------*
+
+  PERFORM seleciona_mlgn.
+  PERFORM seleciona_mlgt.
+
+*----------------------------------------------------------------------*
+END-OF-SELECTION.
+*----------------------------------------------------------------------*
+
+*----------------------------------------------------------------------*
+*              F O R M   S E L E C I O N A _ M L G N
+*----------------------------------------------------------------------*
+* Seleciona os registros da tabela MLGN conforme parâmetros
+*----------------------------------------------------------------------*
+FORM seleciona_mlgn.
+
+
+  SELECT matnr lgnum lgbkz ltkze ltkza lhmg1 lhmg2 lhmg3 lhme1 lhme2
+         lhme3 lety1 lety2 lety3 lvsme kzzul block kzmbf bsskz mkapv
+         bezme plkpt vomem l2skr
+     FROM mlgn
+     INTO TABLE t_mlgn
+     WHERE matnr IN s_matnr  AND
+           lgnum IN s_lgnum  AND
+           lvorm EQ ' '.
+
+  IF sy-subrc NE 0.
+    MESSAGE i011(pc)
+      WITH 'Nenhum resgistro encontrado na tabela MLGN'.
+    STOP.
+  ENDIF.
+
+  LOOP AT t_mlgn.
+
+    MOVE t_mlgn-matnr TO t_mlgntxt-matnr.
+    MOVE t_mlgn-lgnum TO t_mlgntxt-lgnum.
+    MOVE t_mlgn-lgbkz TO t_mlgntxt-lgbkz.
+    MOVE t_mlgn-ltkze TO t_mlgntxt-ltkze.
+    MOVE t_mlgn-ltkza TO t_mlgntxt-ltkza.
+    MOVE t_mlgn-lhmg1 TO t_mlgntxt-lhmg1.
+    MOVE t_mlgn-lhmg2 TO t_mlgntxt-lhmg2.
+    MOVE t_mlgn-lhmg3 TO t_mlgntxt-lhmg3.
+    MOVE t_mlgn-lhme1 TO t_mlgntxt-lhme1.
+    MOVE t_mlgn-lhme2 TO t_mlgntxt-lhme2.
+    MOVE t_mlgn-lhme3 TO t_mlgntxt-lhme3.
+    MOVE t_mlgn-lety1 TO t_mlgntxt-lety1.
+    MOVE t_mlgn-lety2 TO t_mlgntxt-lety2.
+    MOVE t_mlgn-lety3 TO t_mlgntxt-lety3.
+    MOVE t_mlgn-lvsme TO t_mlgntxt-lvsme.
+    MOVE t_mlgn-kzzul TO t_mlgntxt-kzzul.
+    MOVE t_mlgn-block TO t_mlgntxt-block.
+    MOVE t_mlgn-kzmbf TO t_mlgntxt-kzmbf.
+    MOVE t_mlgn-bsskz TO t_mlgntxt-bsskz.
+    MOVE t_mlgn-mkapv TO t_mlgntxt-mkapv.
+    MOVE t_mlgn-bezme TO t_mlgntxt-bezme.
+    MOVE  t_mlgn-plkpt TO t_mlgntxt-plkpt.
+    MOVE  t_mlgn-vomem TO t_mlgntxt-vomem.
+    MOVE  t_mlgn-l2skr TO t_mlgntxt-l2skr.
+    APPEND t_mlgntxt.
+
+  ENDLOOP.
+
+  PERFORM zdownload TABLES t_mlgntxt USING p_mlgn.
+
+ENDFORM.                    "seleciona_mlgn
+*----------------------------------------------------------------------*
+*              F O R M   S E L E C I O N A _ M L G T
+*----------------------------------------------------------------------*
+* Seleciona os registros da tabela MLGT conforme parâmetros
+*----------------------------------------------------------------------*
+FORM seleciona_mlgt.
+
+  SELECT matnr lgnum lgtyp lgpla lpmax lpmin mamng nsmng kober rdmng
+     FROM mlgt
+     INTO TABLE t_mlgt
+     WHERE matnr IN s_matnr  AND
+           lgnum IN s_lgnum  AND
+           lvorm EQ ' '.
+
+  IF sy-subrc NE 0.
+    MESSAGE i011(pc)
+      WITH 'Nenhum resgistro encontrado na tabela MLGT'.
+  ENDIF.
+
+
+  LOOP AT t_mlgt.
+
+    MOVE t_mlgt-matnr TO t_mlgttxt-matnr.
+    MOVE t_mlgt-lgnum TO t_mlgttxt-lgnum.
+    MOVE t_mlgt-lgtyp TO t_mlgttxt-lgtyp.
+    MOVE t_mlgt-lgpla TO t_mlgttxt-lgpla.
+    MOVE t_mlgt-lpmax TO t_mlgttxt-lpmax.
+    MOVE t_mlgt-lpmin TO t_mlgttxt-lpmin.
+    MOVE t_mlgt-mamng TO t_mlgttxt-mamng.
+    MOVE t_mlgt-nsmng TO t_mlgttxt-nsmng.
+    MOVE t_mlgt-kober TO t_mlgttxt-kober.
+    MOVE t_mlgt-rdmng TO t_mlgttxt-rdmng.
+    APPEND t_mlgttxt.
+
+  ENDLOOP.
+
+  PERFORM zdownload TABLES t_mlgttxt USING p_mlgt.
+
+
+ENDFORM.                    "seleciona_mlgt
+*----------------------------------------------------------------------*
+*                      Form   Z D O W N L O A D
+*----------------------------------------------------------------------*
+* Faz o download dos arquivos para maquina local ou no servidor
+*----------------------------------------------------------------------*
+FORM zdownload  TABLES tab USING v_program TYPE rlgrap-filename.
+  DATA: v_program2   TYPE string,
+  v_tabela(15).
+
+
+
+  IF p_local EQ 'X'.
+
+    MOVE v_program TO v_program2.
+    TRANSLATE v_program TO LOWER CASE.
+
+    v_tabela = ''.
+
+    CALL FUNCTION 'GUI_DOWNLOAD'
+     EXPORTING
+        filename                     = v_program2
+        filetype                     = 'ASC'
+* IMPORTING
+*    FILELENGTH                    = V_FILELENGHT
+      TABLES
+        data_tab                      = tab
+*   FIELDNAMES                    =
+     EXCEPTIONS
+       file_write_error              = 1
+       no_batch                      = 2
+       gui_refuse_filetransfer       = 3
+       invalid_type                  = 4
+       no_authority                  = 5
+       unknown_error                 = 6
+       header_not_allowed            = 7
+       separator_not_allowed         = 8
+       filesize_not_allowed          = 9
+       header_too_long               = 10
+       dp_error_create               = 11
+       dp_error_send                 = 12
+       dp_error_write                = 13
+       unknown_dp_error              = 14
+       access_denied                 = 15
+       dp_out_of_memory              = 16
+       disk_full                     = 17
+       dp_timeout                    = 18
+       file_not_found                = 19
+       dataprovider_exception        = 20
+       control_flush_error           = 21
+       OTHERS                        = 22.
+
+    IF sy-subrc <> 0.
+      CONCATENATE  'Erro ao gerar a tabela ' v_program2
+      INTO v_tabela.
+      MESSAGE i011(pc)
+        WITH v_tabela.
+    ENDIF.
+
+    CLEAR tab.
+    REFRESH tab.
+  ENDIF.
+
+**************************** Servidor **********************************
+  IF p_serv EQ 'X'.
+    MOVE v_program TO v_program2.
+    TRANSLATE v_program2 TO LOWER CASE.
+
+    OPEN DATASET v_program2 FOR OUTPUT IN TEXT MODE ENCODING DEFAULT.
+    IF sy-subrc EQ 8.
+      MESSAGE s001(pc) WITH 'Arquivo ou caminho não existente.'.
+    ENDIF.
+
+    LOOP AT t_mlgntxt.
+      TRANSFER t_mlgntxt TO v_program2.
+    ENDLOOP.
+*-    Fechando arq/caminho digitado
+
+    CLOSE DATASET v_program2.
+
+  ENDIF.
+
+ENDFORM.                    " zdownload
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: PC
+*001   Erro ao executar o programa WS
+*011   &
