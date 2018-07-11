@@ -1,0 +1,1305 @@
+REPORT zmigra001.
+
+TABLES: knvv,
+        knb1,
+        knb5,
+        knvi,
+        knvk,
+        knvp,
+        kna1.
+
+
+TYPE-POOLS: slis.
+
+********************** DECLARAÇÕES PARA O ALV **************************
+DATA: txt_report LIKE dokhl-object.
+
+DATA: gt_fieldcat  TYPE slis_t_fieldcat_alv,
+      gt_sort      TYPE slis_sortinfo_alv OCCURS 0 WITH HEADER LINE,
+      gt_events    TYPE slis_t_event,
+      gs_selfield  TYPE slis_selfield,
+      t_listheader TYPE slis_t_listheader,
+      gs_layout    TYPE slis_layout_alv,
+      t_linecolor  TYPE  slis_specialcol_alv OCCURS 0 WITH HEADER LINE.
+
+DATA: v_listheader TYPE slis_listheader,       "cabeçalho
+      v_flag,
+      v_variante   LIKE disvariant,            "Variante de exibição
+      v_repid      LIKE sy-repid.
+************************************************************************
+
+
+DATA: BEGIN OF t_clientes OCCURS 0,
+      kunnr     LIKE kna1-kunnr,
+      name1     LIKE kna1-name1,
+      name2     LIKE kna1-name2,
+      ort01     LIKE kna1-ort01,
+      ort02     LIKE kna1-ort02,
+      pstlz     LIKE kna1-pstlz,
+      land1     LIKE kna1-land1,
+      regio     LIKE kna1-regio,
+      sortl     LIKE kna1-sortl,
+      stras     LIKE kna1-stras,
+      telf1     LIKE kna1-telf1,
+      erdat     LIKE kna1-erdat,
+      ernam     LIKE kna1-ernam,
+      brsch     LIKE kna1-brsch,
+      stceg     LIKE kna1-stceg,
+      zdata     LIKE kna1-zdata,
+      aufsd     LIKE kna1-aufsd,
+      ktokd     LIKE kna1-ktokd,
+      locco     LIKE kna1-locco,
+      loevm     LIKE kna1-loevm,
+      niels     LIKE kna1-niels,
+      knurl     LIKE kna1-knurl,
+      stkzn     LIKE kna1-stkzn,
+      txjcd     LIKE kna1-txjcd,
+      xsubt     LIKE kna1-xsubt,
+      cfopc     LIKE kna1-cfopc,
+      spras     LIKE kna1-spras,
+      stcd1     LIKE kna1-stcd1,
+      stcd2     LIKE kna1-stcd2,
+      stcd3     LIKE kna1-stcd3,
+      nodel     LIKE kna1-nodel,
+      smtp_addr LIKE adr6-smtp_addr,
+      vkorg     LIKE knvv-vkorg,
+      vtweg     LIKE knvv-vtweg,
+      spart     LIKE knvv-spart,
+      kdgrp     LIKE knvv-kdgrp,
+      waers     LIKE knvv-waers,
+      kalks     LIKE knvv-kalks,
+      vsbed     LIKE knvv-vsbed,
+      pltyp     LIKE knvv-pltyp,
+      versg     LIKE knvv-versg,
+      kztlf     LIKE knvv-kztlf,
+      antlf     LIKE knvv-antlf,
+      bokre     LIKE knvv-bokre,
+      prfre     LIKE knvv-prfre,
+      inco1     LIKE knvv-inco1,
+      inco2     LIKE knvv-inco2,
+      ktgrd     LIKE knvv-ktgrd,
+      bukrs     LIKE knb1-bukrs,
+      akont     LIKE knb1-akont,
+      zuawa     LIKE knb1-zuawa,
+      fdgrv     LIKE knb1-fdgrv,
+      vzskz     LIKE knb1-vzskz,
+      altkn     LIKE knb1-altkn,
+      zwels     LIKE knb1-zwels,
+      zahls     LIKE knb1-zahls,
+      hbkid     LIKE knb1-hbkid,
+      mahna     LIKE knb5-mahna,
+      taxkd     LIKE knvi-taxkd,
+      name3     LIKE knvk-name1,
+      name4     LIKE knvk-name1,
+      name5     LIKE knvk-name1,
+      name6     LIKE knvk-name1,
+      namev1    LIKE knvk-namev,
+      namev2    LIKE knvk-namev,
+      namev3    LIKE knvk-namev,
+      namev4    LIKE knvk-namev,
+      parvw     LIKE knvp-parvw,
+      lifnr     LIKE knvp-lifnr,
+      pernr     LIKE knvp-pernr,
+      END OF t_clientes.
+
+DATA: BEGIN OF t_clientes2 OCCURS 0,
+      kunnr     LIKE kna1-kunnr,
+      name1     LIKE kna1-name1,
+      name2     LIKE kna1-name2,
+      ort01     LIKE kna1-ort01,
+      ort02     LIKE kna1-ort02,
+      pstlz     LIKE kna1-pstlz,
+      land1     LIKE kna1-land1,
+      regio     LIKE kna1-regio,
+      sortl     LIKE kna1-sortl,
+      stras     LIKE kna1-stras,
+      telf1     LIKE kna1-telf1,
+      erdat     LIKE kna1-erdat,
+      ktokd     LIKE kna1-ktokd,
+      locco     LIKE kna1-locco,
+      loevm     LIKE kna1-loevm,
+      niels     LIKE kna1-niels,
+      knurl     LIKE kna1-knurl,
+      stkzn     LIKE kna1-stkzn,
+      txjcd     LIKE kna1-txjcd,
+      xsubt     LIKE kna1-xsubt,
+      cfopc     LIKE kna1-cfopc,
+      spras     LIKE kna1-spras,
+      stcd1     LIKE kna1-stcd1,
+      stcd2     LIKE kna1-stcd2,
+      stcd3     LIKE kna1-stcd3,
+      nodel     LIKE kna1-nodel,
+      END OF t_clientes2.
+
+TYPES: BEGIN OF st_cli,
+       stcd1     LIKE kna1-stcd1,
+       stcd2     LIKE kna1-stcd2,
+       cont(03)  TYPE p DECIMALS 0,
+       END OF st_cli.
+
+DATA: tp_cli      TYPE st_cli,
+
+        collect_cli TYPE HASHED TABLE OF st_cli
+               WITH UNIQUE KEY stcd1 stcd2 WITH HEADER LINE.
+
+DATA: qtdereg     TYPE i.
+
+SELECTION-SCREEN BEGIN OF BLOCK b1 WITH FRAME TITLE text-001.
+
+SELECT-OPTIONS: s_kunnr FOR kna1-kunnr,
+                s_ktokd FOR kna1-ktokd,
+                s_erdat FOR kna1-erdat,
+                s_regio FOR kna1-regio,
+                s_land1 FOR kna1-land1,
+                s_loevm FOR kna1-loevm,
+                s_nodel FOR kna1-nodel,
+                s_ernam FOR kna1-ernam,
+                s_zdata FOR kna1-zdata,
+                s_aufsd FOR kna1-aufsd,
+                s_vkorg FOR knvv-vkorg,
+                s_vtweg FOR knvv-vtweg,
+                s_spart FOR knvv-spart,
+                s_stkzn FOR kna1-stkzn.
+
+SELECTION-SCREEN SKIP 1.
+PARAMETERS: p_cad TYPE c AS CHECKBOX.
+SELECTION-SCREEN SKIP 1.
+PARAMETERS: p_dup TYPE c AS CHECKBOX.
+SELECTION-SCREEN SKIP 1.
+
+PARAMETERS p_varia LIKE disvariant-variant.
+
+SELECTION-SCREEN END OF BLOCK b1.
+
+
+*=======================================================================
+INITIALIZATION.
+*=======================================================================
+  PERFORM zf_init_alv.
+
+AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_varia.
+  PERFORM zf_recupera_layouts_salvos.
+
+*----------------------------------------------------------------------*
+START-OF-SELECTION.
+*----------------------------------------------------------------------*
+
+  PERFORM seleciona_kna1.
+  IF p_cad NE 'X'.
+    PERFORM seleciona_knb1.
+    PERFORM seleciona_knb5.
+    PERFORM seleciona_knvi.
+    PERFORM seleciona_knvk.
+    PERFORM seleciona_knvp.
+  ELSE.
+    DELETE ADJACENT DUPLICATES FROM t_clientes COMPARING ALL FIELDS.
+  ENDIF.
+
+*=======================================================================
+* Rotinas de emissão dos relatórios - ALV
+*=======================================================================
+  PERFORM fieldcat_init USING gt_fieldcat[].
+  PERFORM layout_init USING gs_layout.
+  PERFORM zf_sort_subtotal.
+  PERFORM eventtab_build USING gt_events[].
+  PERFORM main.
+
+*----------------------------------------------------------------------*
+END-OF-SELECTION.
+*----------------------------------------------------------------------*
+
+
+*----------------------------------------------------------------------*
+*           FORM S E L E C I O N A _ K N A 1  e  K N V V
+*----------------------------------------------------------------------*
+FORM seleciona_kna1.
+  DATA: v_idx     TYPE i.
+
+  SELECT kunnr name1 name2 ort01 ort02 pstlz land1 regio sortl stras
+         telf1 erdat ernam brsch stceg zdata aufsd ktokd locco loevm
+         niels knurl stkzn txjcd xsubt cfopc spras stcd1 stcd2 stcd3
+         nodel smtp_addr
+    APPENDING CORRESPONDING FIELDS OF TABLE t_clientes
+    FROM kna1 LEFT JOIN adr6
+      ON kna1~adrnr EQ adr6~addrnumber
+      WHERE ktokd IN s_ktokd
+       AND  kunnr IN s_kunnr
+       AND  erdat IN s_erdat
+       AND  regio IN s_regio
+       AND  land1 IN s_land1
+       AND  stkzn IN s_stkzn
+       AND  loevm IN s_loevm
+       AND  nodel IN s_nodel
+       AND  ernam IN s_ernam
+       AND  aufsd IN s_aufsd
+       AND  zdata IN s_zdata.
+
+  IF sy-subrc NE 0.
+    MESSAGE i011(pc) WITH 'Nenhum Registro encontrado'.
+    STOP.
+  ENDIF.
+
+**  Verifica as duplicidades do Cadastro de Clientes
+  IF p_dup EQ 'X'.
+    LOOP AT t_clientes.
+      MOVE-CORRESPONDING t_clientes TO tp_cli.
+      MOVE 1 TO tp_cli-cont.
+      COLLECT tp_cli INTO collect_cli.
+      CLEAR tp_cli.
+    ENDLOOP.
+
+    SORT t_clientes ASCENDING BY stcd1.
+    SORT collect_cli DESCENDING BY cont stcd1 ASCENDING.
+    LOOP AT collect_cli.
+
+      IF collect_cli-cont EQ 1.
+        CONTINUE.
+      ENDIF.
+      IF collect_cli-stcd1 NE space.
+        LOOP AT t_clientes WHERE stcd1 EQ collect_cli-stcd1.
+
+          MOVE-CORRESPONDING t_clientes TO t_clientes2.
+          APPEND t_clientes2.
+        ENDLOOP.
+      ENDIF.
+      IF collect_cli-stcd2 NE space.
+        LOOP AT t_clientes WHERE stcd2 EQ collect_cli-stcd2.
+
+          MOVE-CORRESPONDING t_clientes TO t_clientes2.
+          APPEND t_clientes2.
+        ENDLOOP.
+      ENDIF.
+
+    ENDLOOP.
+
+    REFRESH t_clientes.
+    CLEAR t_clientes.
+    t_clientes[] = t_clientes2[].
+
+  ENDIF.
+**
+
+
+  IF s_vkorg[] IS NOT INITIAL OR
+     s_vtweg[] IS NOT INITIAL.
+
+    LOOP AT t_clientes.
+
+      SELECT knvv~antlf knvv~bokre knvv~inco1 knvv~inco2 knvv~kalks
+             knvv~kdgrp knvv~ktgrd knvv~kztlf knvv~prfre knvv~spart
+             knvv~vkorg knvv~vsbed knvv~pltyp knvv~versg knvv~vtweg
+             knvv~waers
+       INTO (knvv-antlf, knvv-bokre, knvv-inco1, knvv-inco2, knvv-kalks,
+             knvv-kdgrp, knvv-ktgrd, knvv-kztlf, knvv-prfre, knvv-spart,
+             knvv-vkorg, knvv-vsbed, knvv-pltyp, knvv-versg, knvv-vtweg,
+              knvv-waers)
+           FROM knvv
+          WHERE knvv~kunnr EQ t_clientes-kunnr AND
+                knvv~vkorg IN s_vkorg          AND
+                knvv~spart IN s_spart          AND
+                knvv~vtweg IN s_vtweg.
+
+        IF p_cad    NE 'X'.
+          IF sy-dbcnt EQ 1.
+            MOVE knvv-antlf TO t_clientes-antlf.
+            MOVE knvv-bokre TO t_clientes-bokre.
+            MOVE knvv-inco1 TO t_clientes-inco1.
+            MOVE knvv-inco2 TO t_clientes-inco2.
+            MOVE knvv-kalks TO t_clientes-kalks.
+            MOVE knvv-kdgrp TO t_clientes-kdgrp.
+            MOVE knvv-ktgrd TO t_clientes-ktgrd.
+            MOVE knvv-kztlf TO t_clientes-kztlf.
+            MOVE knvv-prfre TO t_clientes-prfre.
+            MOVE knvv-spart TO t_clientes-spart.
+            MOVE knvv-vkorg TO t_clientes-vkorg.
+            MOVE knvv-vsbed TO t_clientes-vsbed.
+            MOVE knvv-pltyp TO t_clientes-pltyp.
+            MOVE knvv-versg TO t_clientes-versg.
+            MOVE knvv-vtweg TO t_clientes-vtweg.
+            MOVE knvv-waers TO t_clientes-waers.
+            MODIFY t_clientes.
+          ELSE.
+            MOVE knvv-antlf TO t_clientes-antlf.
+            MOVE knvv-bokre TO t_clientes-bokre.
+            MOVE knvv-inco1 TO t_clientes-inco1.
+            MOVE knvv-inco2 TO t_clientes-inco2.
+            MOVE knvv-kalks TO t_clientes-kalks.
+            MOVE knvv-kdgrp TO t_clientes-kdgrp.
+            MOVE knvv-ktgrd TO t_clientes-ktgrd.
+            MOVE knvv-kztlf TO t_clientes-kztlf.
+            MOVE knvv-prfre TO t_clientes-prfre.
+            MOVE knvv-spart TO t_clientes-spart.
+            MOVE knvv-vkorg TO t_clientes-vkorg.
+            MOVE knvv-vsbed TO t_clientes-vsbed.
+            MOVE knvv-pltyp TO t_clientes-pltyp.
+            MOVE knvv-versg TO t_clientes-versg.
+            MOVE knvv-vtweg TO t_clientes-vtweg.
+            MOVE knvv-waers TO t_clientes-waers.
+            IF sy-tabix = 1.
+              v_idx = sy-tabix.
+            ELSE.
+              v_idx = sy-tabix - 1.
+            ENDIF.
+            INSERT t_clientes INDEX v_idx.
+          ENDIF.
+        ENDIF.
+
+      ENDSELECT.
+
+      IF sy-subrc NE 0 AND
+         s_vtweg[] IS NOT INITIAL.
+        DELETE t_clientes.
+        CLEAR knvv.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDIF.
+
+ENDFORM.                    "seleciona_kna1
+*----------------------------------------------------------------------*
+*           FORM   S E L E C I O N A _ K N B 1
+*----------------------------------------------------------------------*
+FORM seleciona_knb1.
+
+  LOOP AT t_clientes.
+
+    SELECT SINGLE bukrs akont zuawa fdgrv vzskz altkn zwels zahls hbkid
+        FROM knb1
+       INTO (knb1-bukrs, knb1-akont, knb1-zuawa, knb1-fdgrv, knb1-vzskz,
+             knb1-altkn, knb1-zwels, knb1-zahls, knb1-hbkid)
+        WHERE kunnr EQ t_clientes-kunnr.
+
+    IF sy-subrc NE 0.
+      CLEAR knb1.
+    ELSE.
+      MOVE knb1-bukrs TO t_clientes-bukrs.
+      MOVE knb1-akont TO t_clientes-akont.
+      MOVE knb1-zuawa TO t_clientes-zuawa.
+      MOVE knb1-fdgrv TO t_clientes-fdgrv.
+      MOVE knb1-vzskz TO t_clientes-vzskz.
+      MOVE knb1-altkn TO t_clientes-altkn.
+      MOVE knb1-zwels TO t_clientes-zwels.
+      MOVE knb1-zahls TO t_clientes-zahls.
+      MOVE knb1-hbkid TO t_clientes-hbkid.
+      MODIFY t_clientes.
+      CLEAR t_clientes.
+    ENDIF.
+
+  ENDLOOP.
+
+ENDFORM.                    "seleciona_knb1
+*----------------------------------------------------------------------*
+*           FORM S E L E C I O N A _ K N B 5
+*----------------------------------------------------------------------*
+FORM seleciona_knb5.
+
+  LOOP AT t_clientes.
+
+    SELECT SINGLE mahna
+        FROM knb5
+       INTO knb5-mahna
+        WHERE kunnr EQ t_clientes-kunnr.
+
+    IF sy-subrc NE 0.
+      CLEAR knb5.
+    ELSE.
+      MOVE knb5-mahna TO t_clientes-mahna.
+      MODIFY t_clientes.
+    ENDIF.
+
+  ENDLOOP.
+
+ENDFORM.                    "seleciona_knb5
+*----------------------------------------------------------------------*
+*           FORM S E L E C I O N A _ K N V I
+*----------------------------------------------------------------------*
+FORM seleciona_knvi.
+
+  LOOP AT t_clientes.
+
+    SELECT SINGLE taxkd
+        FROM knvi
+       INTO knvi-taxkd
+        WHERE kunnr EQ t_clientes-kunnr.
+
+    IF sy-subrc NE 0.
+      CLEAR knvi.
+    ELSE.
+      MOVE knvi-taxkd TO t_clientes-taxkd.
+      MODIFY t_clientes.
+      CLEAR t_clientes.
+    ENDIF.
+
+  ENDLOOP.
+
+ENDFORM.                    "seleciona_knvi
+*----------------------------------------------------------------------*
+*           FORM S E L E C I O N A _ K N V K
+*----------------------------------------------------------------------*
+FORM seleciona_knvk.
+
+  LOOP AT t_clientes.
+
+    SELECT name1 namev
+        FROM knvk
+       INTO (knvk-name1, knvk-namev)
+        WHERE kunnr EQ t_clientes-kunnr.
+
+      IF sy-subrc NE 0.
+        CLEAR knvk.
+      ELSE.
+        IF sy-dbcnt EQ 1.
+          MOVE knvk-name1 TO t_clientes-name3.
+          MOVE knvk-namev TO t_clientes-namev1.
+        ENDIF.
+        IF sy-dbcnt EQ 2.
+          MOVE knvk-name1 TO t_clientes-name4.
+          MOVE knvk-namev TO t_clientes-namev2.
+        ENDIF.
+        IF sy-dbcnt EQ 3.
+          MOVE knvk-name1 TO t_clientes-name5.
+          MOVE knvk-namev TO t_clientes-namev3.
+        ENDIF.
+        IF sy-dbcnt EQ 4.
+          MOVE knvk-name1 TO t_clientes-name6.
+          MOVE knvk-namev TO t_clientes-namev4.
+        ENDIF.
+
+        MODIFY t_clientes.
+      ENDIF.
+    ENDSELECT.
+  ENDLOOP.
+
+ENDFORM.                    "seleciona_knvk
+*----------------------------------------------------------------------*
+*           FORM S E L E C I O N A _ K N V P
+*----------------------------------------------------------------------*
+FORM seleciona_knvp.
+
+  LOOP AT t_clientes.
+
+    SELECT SINGLE lifnr
+        FROM knvp
+       INTO knvp-lifnr
+        WHERE kunnr EQ t_clientes-kunnr AND
+              vkorg EQ t_clientes-vkorg AND
+              vtweg EQ t_clientes-vtweg AND
+              spart EQ t_clientes-spart AND
+              parvw EQ 'SP'.
+
+    IF sy-subrc NE 0.
+      CLEAR knvp.
+    ELSE.
+      MOVE knvp-lifnr TO t_clientes-lifnr.
+      MODIFY t_clientes.
+    ENDIF.
+
+    SELECT SINGLE pernr
+        FROM knvp
+       INTO knvp-pernr
+        WHERE kunnr EQ t_clientes-kunnr AND
+              vkorg EQ t_clientes-vkorg AND
+              vtweg EQ t_clientes-vtweg AND
+              spart EQ t_clientes-spart AND
+              parvw EQ 'KM'.
+
+    IF sy-subrc NE 0.
+      CLEAR knvp.
+    ELSE.
+      MOVE knvp-pernr TO t_clientes-pernr.
+      MODIFY t_clientes.
+      CLEAR t_clientes.
+    ENDIF.
+
+  ENDLOOP.
+
+
+ENDFORM.                    "seleciona_knvp
+*=======================================================================
+*       Form  fieldcat_init
+*=======================================================================
+FORM fieldcat_init  USING lt_fieldcat TYPE slis_t_fieldcat_alv.
+  DATA: ls_fieldcat TYPE slis_fieldcat_alv.
+
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'KUNNR'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Cliente'.
+  ls_fieldcat-outputlen = '10'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'NAME1'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Nome'.
+  ls_fieldcat-outputlen = '35'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'NAME2'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Nome2'.
+  ls_fieldcat-outputlen = '35'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'ORT01'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Local'.
+  ls_fieldcat-outputlen = '35'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'ORT02'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Zona'.
+  ls_fieldcat-outputlen = '35'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'PSTLZ'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Código Postal'.
+  ls_fieldcat-outputlen = '15'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'LAND1'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'País'.
+  ls_fieldcat-outputlen = '10'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'REGIO'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Região'.
+  ls_fieldcat-outputlen = '10'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'SORTL'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Termo Pesq.'.
+  ls_fieldcat-outputlen = '10'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'STRAS'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Rua'.
+  ls_fieldcat-outputlen = '35'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'TELF1'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Telefone 1'.
+  ls_fieldcat-outputlen = '20'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'ERDAT'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Data Criação'.
+  ls_fieldcat-outputlen = '10'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'ERNAM'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Criado por'.
+  ls_fieldcat-outputlen = '10'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'KTOKD'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Grupo de Contas'.
+  ls_fieldcat-outputlen = '10'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'LOCCO'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Domicílio fiscal'.
+  ls_fieldcat-outputlen = '10'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'LOEVM'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Marc.p/Elim.'.
+  ls_fieldcat-outputlen = '10'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'AUFSD'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Bloqueio da Ordem'.
+  ls_fieldcat-outputlen = '10'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'BRSCH'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Setor Industrial'.
+  ls_fieldcat-outputlen = '10'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'ZDATA'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Dt.Ult.compra'.
+  ls_fieldcat-outputlen = '10'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'NIELS'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Zona Nielsen'.
+  ls_fieldcat-outputlen = '10'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'KNURL'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'URL'.
+  ls_fieldcat-outputlen = '10'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'STKZN'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Pessoa Fisica'.
+  ls_fieldcat-outputlen = '10'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'TXJCD'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Cód.Jurisd.'.
+  ls_fieldcat-outputlen = '16'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'STCEG'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Suframa'.
+  ls_fieldcat-outputlen = '16'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'XSUBT'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Grp. Subfiscal'.
+  ls_fieldcat-outputlen = '10'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'CFOPC'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Ctg.CFOP'.
+  ls_fieldcat-outputlen = '10'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'SPRAS'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Idioma'.
+  ls_fieldcat-outputlen = '10'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'STCD1'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'C.G.C'.
+  ls_fieldcat-outputlen = '20'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'STCD2'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'CPF'.
+  ls_fieldcat-outputlen = '20'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'STCD3'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Inscr. Estadual'.
+  ls_fieldcat-outputlen = '20'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'NODEL'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'Bloq.Elim.'.
+  ls_fieldcat-outputlen = '20'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  CLEAR ls_fieldcat.
+  ls_fieldcat-fieldname = 'SMTP_ADDR'.
+  ls_fieldcat-tabname = 'T_CLIENTES'.
+  ls_fieldcat-reptext_ddic  = 'E-MAIL'.
+  ls_fieldcat-outputlen = '40'.
+  ls_fieldcat-key = ' '.
+  APPEND ls_fieldcat TO lt_fieldcat.
+
+  IF p_cad NE 'X'.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'VKORG'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Organiz.vendas'.
+    ls_fieldcat-outputlen = '10'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'VTWEG'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Canal distrib.'.
+    ls_fieldcat-outputlen = '10'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'SPART'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Setor atividade'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'KDGRP'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Grupo clientes'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'WAERS'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Moeda'.
+    ls_fieldcat-outputlen = '10'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'KALKS'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Esquema cliente'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'VSBED'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Condição exped.'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'PLTYP'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Lista de preços'.
+    ls_fieldcat-outputlen = '10'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'VERSG'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'GrupoEstatClien'.
+    ls_fieldcat-outputlen = '10'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'KZTLF'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Rem.parcial/itm'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'ANTLF'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Máx.rems.parc'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'BOKRE'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Bônus'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'PRFRE'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Determ.preço'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'INCO1'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = ' Incoterms'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'INCO2'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = ' Incotermos 2'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'KTGRD'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Grp.cl.contábil'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'BUKRS'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Empresa'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'AKONT'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Cta.concil.'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'ZUAWA'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Chv.ordenação'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'FDGRV'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Grp Admin.Tesour.'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'VZSKZ'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Cód.cálc.juros'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'ALTKN'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Nº antigo conta'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'ZWELS'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Meios de pgto.'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'ZAHLS'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Bloqueio'.
+    ls_fieldcat-outputlen = '10'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'HBKID'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Bco Empresa'.
+    ls_fieldcat-outputlen = '12'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'MAHNA'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Proced.cobrança'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'TAXKD'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Classif.fiscal'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'NAME2'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Contato1'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'NAME3'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Contato2'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'NAME4'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Contato3'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'NAME5'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Contato3'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'NAMEV1'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Nome Contato1'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'NAMEV2'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Nome Contato2'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'NAMEV3'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Nome Contato3'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'NAMEV4'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Nome Contato4'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'LIFNR'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Fornecedor'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+    CLEAR ls_fieldcat.
+    ls_fieldcat-fieldname = 'PERNR'.
+    ls_fieldcat-tabname = 'T_CLIENTES'.
+    ls_fieldcat-reptext_ddic  = 'Nº Pessoal'.
+    ls_fieldcat-outputlen = '20'.
+    ls_fieldcat-key = ' '.
+    APPEND ls_fieldcat TO lt_fieldcat.
+
+  ENDIF.
+
+  CLEAR ls_fieldcat.
+
+ENDFORM.                    " fieldcat_init
+*=======================================================================
+**      Form  layout_init
+*=======================================================================
+FORM layout_init USING ls_layout TYPE slis_layout_alv.
+
+  ls_layout-colwidth_optimize = 'X'.
+
+ENDFORM.                    "layout_init
+*=======================================================================
+**      Form  zf_sort_subtotal
+*=======================================================================
+FORM zf_sort_subtotal .
+
+  CLEAR gt_sort[].
+  gt_sort-spos = 1.
+  gt_sort-fieldname = 'KUNNR'.
+  gt_sort-tabname = 'T_CLIENTES'.
+  gt_sort-up = 'X'.
+  APPEND gt_sort.
+
+  IF p_cad NE 'X'.
+    gt_sort-spos = 2.
+    gt_sort-fieldname = 'VKORG'.
+    gt_sort-tabname = 'T_CLIENTES'.
+    gt_sort-up = 'X'.
+    APPEND gt_sort.
+
+    gt_sort-spos = 3.
+    gt_sort-fieldname = 'VTWEG'.
+    gt_sort-tabname = 'T_CLIENTES'.
+    gt_sort-up = 'X'.
+    APPEND gt_sort.
+
+    gt_sort-spos = 4.
+    gt_sort-fieldname = 'SPART'.
+    gt_sort-tabname = 'T_CLIENTES'.
+    gt_sort-up = 'X'.
+    APPEND gt_sort.
+  ENDIF.
+
+ENDFORM.                    " zf_sort_subtotal
+*=======================================================================
+**      Form  eventtab_build
+*=======================================================================
+FORM eventtab_build USING lt_events TYPE slis_t_event.
+
+  DATA: ls_event TYPE slis_alv_event.
+
+  MOVE 'PF_STATUS_SET' TO ls_event-name.
+  MOVE  'WHOLE_TOOLBAR' TO ls_event-form.
+
+  APPEND ls_event TO lt_events.
+  CLEAR ls_event.
+
+  MOVE 'USER_COMMAND' TO ls_event-name.
+  MOVE 'USER_COMMAND' TO ls_event-form.
+  APPEND ls_event TO lt_events.
+  CLEAR ls_event.
+
+
+ENDFORM.                    "eventtab_build
+
+*=======================================================================
+**    FORM PF_STATUS_SET
+*=======================================================================
+FORM whole_toolbar USING extab TYPE slis_t_extab.           "#EC CALLED
+
+  SET PF-STATUS 'WHOLE_TOOLBAR'.
+
+ENDFORM.                    "whole_toolbar
+*=======================================================================
+**       FORM user_command                                             *
+*=======================================================================
+**  -->  RF_UCOMM                                                      *
+**  -->  RS_SELFIELD                                                   *
+*=======================================================================
+FORM user_command USING rf_ucomm    LIKE sy-ucomm
+                        rs_selfield TYPE slis_selfield.     "#EC CALLED
+
+  CASE rf_ucomm.
+
+    WHEN 'ZTSD001'.
+      txt_report = 'ZMIGRA001'.
+      CALL FUNCTION 'ERGO_TEXT_SHOW'
+        EXPORTING
+          textname = txt_report
+          id       = 'RE'
+          langu    = sy-langu.
+
+
+  ENDCASE.
+ENDFORM.                    "user_command
+*=======================================================================
+**      Form  main
+*=======================================================================
+FORM main.
+
+  v_variante-variant = p_varia.
+
+  CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+    EXPORTING
+      i_callback_program     = 'ZMIGRA001'
+      i_callback_top_of_page = 'ZF_TOP_OF_PAGE'
+      is_layout              = gs_layout
+      it_fieldcat            = gt_fieldcat[]
+      it_sort                = gt_sort[]
+      i_save                 = 'A'
+      is_variant             = v_variante
+      it_events              = gt_events[]
+    TABLES
+      t_outtab               = t_clientes.
+
+  IF sy-subrc <> 0.
+    MESSAGE i011(pc) WITH 'Erro no Display do ALV GRID'.
+    STOP.
+  ENDIF.
+
+
+ENDFORM.                    "main
+*=======================================================================
+**      Form  zf_top_of_page
+*=======================================================================
+FORM zf_top_of_page.
+  DATA: qtde(06)    TYPE c.
+
+  CHECK v_flag IS INITIAL.
+  CLEAR t_listheader[].
+  CLEAR v_listheader.
+  v_listheader-typ = 'H'.
+  v_listheader-info = 'Extração de dados de Clientes'.
+  APPEND v_listheader TO t_listheader.
+  CLEAR v_listheader.
+  v_listheader-typ = 'H'.
+  DESCRIBE TABLE t_clientes LINES qtdereg.
+  qtde = qtdereg.
+  CONCATENATE 'Quantidade total de Registros:' qtde INTO
+       v_listheader-info SEPARATED BY space.
+  APPEND v_listheader TO t_listheader.
+  CLEAR v_listheader.
+  CALL FUNCTION 'REUSE_ALV_COMMENTARY_WRITE'
+    EXPORTING
+      it_list_commentary = t_listheader.
+
+ENDFORM.                    "zf_top_of_page
+*=======================================================================
+**       Form  zf_init_alv
+*=======================================================================
+**       Chama relatório default
+*=======================================================================
+FORM zf_init_alv .
+
+  v_repid = sy-repid.
+  CLEAR v_variante.
+  v_variante-report = v_repid.
+  CALL FUNCTION 'REUSE_ALV_VARIANT_DEFAULT_GET'
+    EXPORTING
+      i_save     = ' '
+    CHANGING
+      cs_variant = v_variante
+    EXCEPTIONS
+      not_found  = 2.
+  IF sy-subrc = 0.
+    p_varia = v_variante-variant.
+  ENDIF.
+
+ENDFORM.                    " zf_init_alv
+*=======================================================================
+**       Form  zf_recupera_layouts_salvos
+*=======================================================================
+**       Recupera outros layouts salvos
+*=======================================================================
+FORM zf_recupera_layouts_salvos .
+
+  v_variante-report = v_repid.
+  CALL FUNCTION 'REUSE_ALV_VARIANT_F4'
+    EXPORTING
+      is_variant = v_variante
+      i_save     = 'A'
+    IMPORTING
+      es_variant = v_variante
+    EXCEPTIONS
+      not_found  = 2.
+  IF sy-subrc = 2.
+    MESSAGE i011(pc) WITH 'Nenhum Layout salvo'.
+    STOP.
+  ENDIF.
+  p_varia = v_variante-variant.
+
+ENDFORM.                    " zf_recupera_layouts_salvos
+
+*Text elements
+*----------------------------------------------------------
+* 001 Seleção de parâmetros
+
+
+*Selection texts
+*----------------------------------------------------------
+* P_CAD         Somente Dados Cadastrais
+* P_DUP         Clientes Duplicados
+* P_VARIA         Layout
+* S_AUFSD         Bloqueio de ordem
+* S_ERDAT         Data de Criação
+* S_ERNAM D       .
+* S_KTOKD         Grupo contas
+* S_KUNNR         Cliente
+* S_LAND1 D       .
+* S_LOEVM         Marcação p/elim.central
+* S_NODEL         Bloq.central elimin.
+* S_REGIO         Região
+* S_SPART         Setor de atividade
+* S_STKZN         Pessoa física
+* S_VKORG         Organização vendas
+* S_VTWEG         Canal distribuição
+* S_ZDATA         Data ultima compra
+
+
+*Messages
+*----------------------------------------------------------
+*
+* Message class: PC
+*011   &
